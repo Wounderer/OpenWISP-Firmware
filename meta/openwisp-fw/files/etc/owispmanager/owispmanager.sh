@@ -319,6 +319,7 @@ start_configuration_services() {
           stop_configuration_services
           return 1
         fi
+      fi
     else
     # Support 2.4GHz || 5GHz devices
       if [ "`iw phy0 info | grep '2[0-9]\{3\} MHz'`" ]; then
