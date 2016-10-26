@@ -76,7 +76,6 @@ MADWIFI_CONFIGURATION_COMMAND="wlanconfig"
 MAC80211_CONFIGURATION_COMMAND="iw"
 VPN_RESTART_SLEEP_TIME=10
 DATE_UPDATE_TIMEOUT=10
-DATE_UPDATE_SERVERS_NTP="ntp.ien.it"
 DATE_UPDATE_SERVERS_HTTP="www.google.it"
 HAS_RADIO=1
 NETWORK_PROTO=`uci show network.lan.proto | cut -f2 -d'=' | tr -d "\'"`
@@ -135,17 +134,7 @@ check_prerequisites() {
     echo "dnsmasq is missing!"
   fi
 
-  # The following ar not "fatal"
-
-  # ntpclient
-  if [ -x "`which ntpdate`" ] || [ -x "`which htpdate`" ]; then
-    echo "Time synchronization daemon is present"
-  else
-    if [ "$__ret" -lt "2" ]; then
-      __ret="1"
-    fi
-    echo "Time synchronization daemon is missing!"
-  fi
+  # The following are not "fatal"
 
   # curl or wget
   if [ -x "`which curl`" ]; then
@@ -315,26 +304,4 @@ exec_with_timeout() {
 check_vpn_status() {
   (route -n|grep $VPN_IFACE) >/dev/null 2>&1
   return $?
-}
-
-# -------
-# Function:     update_date
-# Description:  Tries hard to update time
-# Input:        nothing
-# Output:       nothing
-# Returns:      0 on success (date/time updated) !0 otherwise
-# Notes:
-update_date() {
-  local __ret=1
-
-  if [ -x "`which ntpdate`" ]; then
-    ntpdate -s -b -u -t $DATE_UPDATE_TIMEOUT $DATE_UPDATE_SERVERS_NTP >/dev/null 2>&1
-    __ret=$?
-  fi
-  if [ "$__ret" -ne "0" -a -x "`which htpdate`" ]; then
-    exec_with_timeout "(htpdate -s -t $DATE_UPDATE_SERVERS_HTTP | grep 'No time correction needed') >/dev/null 2>&1" $DATE_UPDATE_TIMEOUT
-    __ret= [ "$?" -ne "0" ]
-  fi
-
-  return $__ret
 }
